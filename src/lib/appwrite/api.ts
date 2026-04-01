@@ -1,7 +1,6 @@
 import {
   AppwriteException,
   ID,
-  ImageGravity,
   Permission,
   Query,
   Role,
@@ -290,7 +289,7 @@ export async function createPost(post: INewPost) {
     const fileUrl = getFilePreview(uploadedFile.$id);
     if (!fileUrl) {
       await deleteFile(uploadedFile.$id);
-      throw new Error("Could not build image preview URL.");
+      throw new Error("Could not build image file URL.");
     }
 
     const tags = post.tags?.replace(/ /g, "").split(",") || [];
@@ -360,16 +359,14 @@ export async function uploadFile(file: File, permissions?: string[]) {
 }
 
 // ============================== GET FILE URL
+/**
+ * Public URL for a stored file **without** image transformations.
+ * Uses `getFileView` (not `getFilePreview`) so free Appwrite Cloud plans work;
+ * previews with width/height/quality require a paid “image transformations” plan.
+ */
 export function getFilePreview(fileId: string) {
   try {
-    const fileUrl = storage.getFilePreview(
-      appwriteConfig.storageId,
-      fileId,
-      2000,
-      2000,
-      ImageGravity.Top,
-      100
-    );
+    const fileUrl = storage.getFileView(appwriteConfig.storageId, fileId);
 
     if (!fileUrl) throw Error;
 
@@ -379,7 +376,7 @@ export function getFilePreview(fileId: string) {
   }
 }
 
-/** Prefer stored URL; if missing, build a preview URL from `imageId` (storage). */
+/** Prefer stored URL; if missing, build a view URL from `imageId` (storage). */
 export function getPostDisplayImageUrl(
   post: Pick<IPostDoc, "imageUrl" | "imageId" | "$id">
 ): string {
@@ -391,9 +388,8 @@ export function getPostDisplayImageUrl(
 }
 
 /**
- * Load a storage preview with the Appwrite client session (`X-Appwrite-Session`).
- * Plain `<img src={getFilePreview(...)}>` cannot send that header, so private
- * buckets show broken images; this returns an object URL that works in `<img>`.
+ * Load file bytes with the Appwrite client session (`X-Appwrite-Session`).
+ * Uses **view** URLs (no transformations) for compatibility with free plans.
  */
 export async function fetchStoragePreviewBlobUrl(
   fileId: string
@@ -401,34 +397,14 @@ export async function fetchStoragePreviewBlobUrl(
   const id = fileId?.trim();
   if (!id || !appwriteConfig.storageId?.trim()) return null;
 
-  const load = async (buildUrl: () => string) => {
-    const url = new URL(buildUrl());
+  try {
+    const url = new URL(storage.getFileView(appwriteConfig.storageId, id));
     const buf = await client.call("GET", url, {}, {}, "arrayBuffer");
     if (!(buf instanceof ArrayBuffer) || buf.byteLength === 0) return null;
     return URL.createObjectURL(new Blob([buf]));
-  };
-
-  try {
-    return await load(() =>
-      storage.getFilePreview(
-        appwriteConfig.storageId,
-        id,
-        2000,
-        2000,
-        ImageGravity.Top,
-        100
-      )
-    );
   } catch (e) {
     console.error(e);
-    try {
-      return await load(() =>
-        storage.getFileView(appwriteConfig.storageId, id)
-      );
-    } catch (e2) {
-      console.error(e2);
-      return null;
-    }
+    return null;
   }
 }
 

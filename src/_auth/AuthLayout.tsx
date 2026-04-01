@@ -1,18 +1,19 @@
-import { Outlet, Navigate } from 'react-router-dom'
+import { Outlet, Navigate } from "react-router-dom";
 
-const AuthLyout = () => {
-  const isAuthenticated = false
+import { useUserContext } from "@/context/authContext";
+
+const AuthLayout = () => {
+  const { isAuthenticated } = useUserContext();
+
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
   return (
-    <>
-      {isAuthenticated ? (
-        <Navigate to='/' />
-      ) : (
-        <section className="flex min-h-dvh w-full flex-col items-center overflow-y-auto bg-black px-4 py-3 sm:justify-center sm:py-5">
-          <Outlet />
-        </section>
-      )}
-    </>
-  )
-}
+    <section className="flex min-h-dvh w-full flex-col items-center overflow-y-auto bg-black px-4 py-3 sm:justify-center sm:py-5">
+      <Outlet />
+    </section>
+  );
+};
 
-export default AuthLyout
+export default AuthLayout;
