@@ -4,6 +4,8 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Root deployment on Vercel (and local preview) — avoid relative asset URLs.
+  base: '/',
   plugins: [react()],
   resolve: {
     alias: {
