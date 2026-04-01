@@ -1,123 +1,43 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import "./App.css"
+import { Routes, Route } from "react-router-dom"
+import SigninForm from "./_auth/Forms/SigninForm"
+import SignupForm from "./_auth/Forms/SignupForm"
+import AuthLayout from "./_auth/AuthLayout"
+import RootLayout from "./_root/RootLayout"
+import Home from "./_root/pages/Home"
+import Explore from "./_root/pages/Explore"
+import Saved from "./_root/pages/Saved"
+import AllUsers from "./_root/pages/AllUsers"
+import CreatePost from "./_root/pages/CreatePost"
+import EditPost from "./_root/pages/EditPost"
+import PostDetails from "./_root/pages/PostDetails"
+import Profile from "./_root/pages/Profile"
+import UpdateProfile from "./_root/pages/UpdateProfile"
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-          <p className="mt-4 text-blue-600 dark:text-blue-300">
-            Tailwind is working.
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <main className="flex h-screen min-h-0 w-screen flex-col overflow-hidden">
+      <Routes>
+        {/* public routes */}
+        <Route element={<AuthLayout />}>
+          <Route path="/signin" element={<SigninForm />} />
+          <Route path="/signup" element={<SignupForm />} />
+        </Route>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        {/* private routes */}
+        <Route element={<RootLayout />}>
+          <Route index element={<Home />} />
+          <Route path="/explore" element={<Explore />} />
+          <Route path="/saved" element={<Saved />} />
+          <Route path="/all-users" element={<AllUsers />} />
+          <Route path="/create-post" element={<CreatePost />} />
+          <Route path="/update-post/:id" element={<EditPost />} />
+          <Route path="/posts/:id" element={<PostDetails />} />
+          <Route path="/profile/:id/*" element={<Profile />} />
+          <Route path="/update-profile/:id" element={<UpdateProfile />} />
+        </Route>
+      </Routes>
+    </main>
   )
 }
 
