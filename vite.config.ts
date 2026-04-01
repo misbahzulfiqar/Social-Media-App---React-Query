@@ -10,4 +10,9 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    // LightningCSS chokes on some shadcn/Tailwind arbitrary values (e.g. --spacing(...)).
+    // Disabling CSS minification keeps the build working while preserving all styles.
+    cssMinify: false,
+  },
 })
