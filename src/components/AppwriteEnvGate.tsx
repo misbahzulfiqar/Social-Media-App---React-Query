@@ -110,6 +110,13 @@ export function AppwriteEnvGate({ children }: { children: ReactNode }) {
         </a>
         .
       </p>
+      <p style={{ margin: 0, maxWidth: "32rem", fontSize: "0.8125rem", color: "#737373" }}>
+        Tip: open{" "}
+        <a href="/deployment-debug" style={{ color: "#c4b5fd" }}>
+          /deployment-debug
+        </a>{" "}
+        on this same site for a diagnostic panel (works even when env is incomplete).
+      </p>
     </div>
   );
 }
