@@ -7,9 +7,33 @@ import {
   TablesDB,
 } from "appwrite";
 
+/** Ensures Appwrite REST base ends with `/v1` (SDK and console URLs often omit it). */
+function normalizeAppwriteEndpoint(raw: string): string {
+  const t = raw.trim().replace(/\/+$/, "");
+  if (!t) return "";
+  if (/\/v1$/i.test(t)) return t;
+  return `${t}/v1`;
+}
+
+const rawAppwriteUrl = import.meta.env.VITE_APPWRITE_URL?.trim() ?? "";
+const rawAppwriteProjectId =
+  import.meta.env.VITE_APPWRITE_PROJECT_ID?.trim() ?? "";
+const normalizedAppwriteUrl = normalizeAppwriteEndpoint(rawAppwriteUrl);
+const endpointProtocolOk =
+  normalizedAppwriteUrl.startsWith("https://") ||
+  normalizedAppwriteUrl.startsWith("http://");
+
+/**
+ * `true` when URL + project id are present and valid for the Appwrite client.
+ * If `false`, the SDK is pointed at a placeholder host so **importing this module
+ * never throws** (missing `VITE_APPWRITE_URL` used to crash the whole bundle on Vercel).
+ */
+export const isAppwriteClientConfigured =
+  endpointProtocolOk && Boolean(rawAppwriteProjectId);
+
 export const appwriteConfig = {
-  ProjectId: import.meta.env.VITE_APPWRITE_PROJECT_ID,
-  url: import.meta.env.VITE_APPWRITE_URL,
+  ProjectId: rawAppwriteProjectId,
+  url: isAppwriteClientConfigured ? normalizedAppwriteUrl : "",
   databaseId: import.meta.env.VITE_APPWRITE_DATABASE_ID,
   storageId: import.meta.env.VITE_APPWRITE_BUCKET_ID,
   postCollectionId: import.meta.env.VITE_APPWRITE_POST_COLLECTION_ID,
@@ -171,8 +195,16 @@ export function pickUserBio(doc: Record<string, unknown>): string {
 }
 export const client = new Client();
 
-client.setProject(appwriteConfig.ProjectId);
-client.setEndpoint(appwriteConfig.url);
+if (isAppwriteClientConfigured) {
+  client.setEndpoint(normalizedAppwriteUrl);
+  client.setProject(rawAppwriteProjectId);
+} else {
+  // Valid URL shape only — avoids AppwriteException at module load when env is missing on Vercel.
+  client.setEndpoint("https://vite-env-not-set.invalid/v1");
+  if (rawAppwriteProjectId) {
+    client.setProject(rawAppwriteProjectId);
+  }
+}
 
 export const account = new Account(client);
 export const databases = new Databases(client);
