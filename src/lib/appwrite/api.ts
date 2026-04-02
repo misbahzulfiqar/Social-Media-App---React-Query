@@ -20,6 +20,7 @@ import {
   postImageWritePayload,
   storage,
   tablesDb,
+  userProfileImageWritePayload,
 } from "./config";
 import type {
   INewPost,
@@ -30,6 +31,18 @@ import type {
   IUserSavedPostRow,
 } from "@/types";
 import { normalizePostDocument } from "@/lib/utils";
+
+/** Missing / already-deleted storage objects — expected after DB cleanup or bad ids. */
+function isStorageFileNotFoundError(error: unknown): boolean {
+  if (!(error instanceof AppwriteException)) return false;
+  if (error.code === 404) return true;
+  const msg = (error.message ?? "").toLowerCase();
+  return (
+    msg.includes("could not be found") ||
+    msg.includes("file not found") ||
+    msg.includes("not found")
+  );
+}
 
 /**
  * Row/file-level permissions for new posts, files, and profile rows when
@@ -372,7 +385,9 @@ export function getFilePreview(fileId: string) {
 
     return fileUrl;
   } catch (error) {
-    console.log(error);
+    if (!isStorageFileNotFoundError(error)) {
+      console.log(error);
+    }
   }
 }
 
@@ -403,18 +418,25 @@ export async function fetchStoragePreviewBlobUrl(
     if (!(buf instanceof ArrayBuffer) || buf.byteLength === 0) return null;
     return URL.createObjectURL(new Blob([buf]));
   } catch (e) {
-    console.error(e);
+    if (!isStorageFileNotFoundError(e)) {
+      console.error(e);
+    }
     return null;
   }
 }
 
 // ============================== DELETE FILE
 export async function deleteFile(fileId: string) {
+  const id = fileId?.trim();
+  if (!id) return;
   try {
-    await storage.deleteFile(appwriteConfig.storageId, fileId);
+    await storage.deleteFile(appwriteConfig.storageId, id);
 
     return { status: "ok" };
   } catch (error) {
+    if (isStorageFileNotFoundError(error)) {
+      return { status: "ok" };
+    }
     console.log(error);
   }
 }
@@ -574,6 +596,17 @@ export async function deletePost(postId?: string, imageId?: string) {
 // ============================== LIKE / UNLIKE POST
 export async function likePost(postId: string, likesArray: string[]) {
   try {
+    if (postsUseTablesDb) {
+      const updatedPost = await tablesDb.updateRow({
+        databaseId: appwriteConfig.databaseId,
+        tableId: appwriteConfig.postCollectionId,
+        rowId: postId,
+        data: { likes: likesArray },
+      });
+      if (!updatedPost) throw new Error("Like update failed");
+      return updatedPost as unknown as Models.Document;
+    }
+
     const updatedPost = await databases.updateDocument(
       appwriteConfig.databaseId,
       appwriteConfig.postCollectionId,
@@ -583,11 +616,12 @@ export async function likePost(postId: string, likesArray: string[]) {
       }
     );
 
-    if (!updatedPost) throw Error;
+    if (!updatedPost) throw new Error("Like update failed");
 
     return updatedPost;
   } catch (error) {
     console.log(error);
+    throw error;
   }
 }
 
@@ -696,6 +730,25 @@ export async function getUserPosts(userId?: string) {
   }
 }
 
+// ============================== POSTS LIKED BY USER (profile id in post.likes[])
+export async function getPostsLikedByUser(userProfileDocId?: string) {
+  if (!userProfileDocId?.trim()) return;
+
+  try {
+    const posts = await listPostsWithQueries([
+      Query.containsAny("likes", [userProfileDocId.trim()]),
+      Query.orderDesc("$updatedAt"),
+      Query.limit(100),
+    ]);
+
+    if (!posts) throw Error;
+
+    return posts;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 // ============================== GET POPULAR POSTS (BY HIGHEST LIKE COUNT)
 export async function getRecentPosts() {
   try {
@@ -783,15 +836,23 @@ export async function updateUser(user: IUpdateUser) {
     const data: Record<string, string> = {
       name: user.name,
     };
-    if (userCollectionImageAttr) {
-      data[userCollectionImageAttr] =
-        typeof image.imageUrl === "string"
-          ? image.imageUrl
-          : String(image.imageUrl);
+
+    const imageUrlStr =
+      typeof image.imageUrl === "string"
+        ? image.imageUrl
+        : String(image.imageUrl);
+
+    if (hasFileToUpdate) {
+      Object.assign(data, userProfileImageWritePayload(imageUrlStr, image.imageId));
+    } else {
+      if (userCollectionImageAttr) {
+        data[userCollectionImageAttr] = imageUrlStr;
+      }
+      if (userCollectionImageIdAttr) {
+        data[userCollectionImageIdAttr] = image.imageId;
+      }
     }
-    if (userCollectionImageIdAttr) {
-      data[userCollectionImageIdAttr] = image.imageId;
-    }
+
     if (userCollectionBioAttr) {
       data[userCollectionBioAttr] = user.bio ?? "";
     }
@@ -821,5 +882,6 @@ export async function updateUser(user: IUpdateUser) {
     return updatedUser;
   } catch (error) {
     console.log(error);
+    throw error;
   }
 }

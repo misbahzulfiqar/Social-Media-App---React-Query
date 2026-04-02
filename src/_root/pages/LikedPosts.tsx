@@ -1,32 +1,49 @@
 import GridPostList from "@/components/shared/GridPostList";
-import { DEMO_POSTS } from "@/constants/demoFeed";
+import { useGetPostsLikedByUser } from "@/lib/react-query/queriesAndMutations";
 import { Loading } from "@/shared/Loading";
-import { useGetCurrentUser } from "@/lib/react-query/queriesAndMutations";
+import { useUserContext } from "@/context/authContext";
 
 const LikedPosts = () => {
-  const { data: currentUser } = useGetCurrentUser();
+  const { user } = useUserContext();
+  const { data, isLoading, isError } = useGetPostsLikedByUser(user.id);
 
-  if (!currentUser)
+  if (!user.id) {
     return (
-      <div className="flex-center w-full h-full">
+      <p className="text-light-4 w-full text-center">
+        Sign in to see liked posts.
+      </p>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex-center w-full min-h-[200px]">
         <Loading />
       </div>
     );
+  }
 
-  const liked = currentUser.liked ?? [];
+  if (isError) {
+    return (
+      <p className="text-light-4 w-full text-center">
+        Could not load liked posts. Ensure the Posts collection has a string
+        array attribute <code className="text-light-2">likes</code> (user
+        profile ids).
+      </p>
+    );
+  }
 
-  return (
-    <div className="w-full space-y-6">
-      {liked.length === 0 ? (
-        <>
-          <p className="text-light-4">No liked posts yet — sample grid below.</p>
-          <GridPostList posts={DEMO_POSTS} showStats={false} />
-        </>
-      ) : (
-        <GridPostList posts={liked} showStats={false} />
-      )}
-    </div>
-  );
+  const liked = data?.documents ?? [];
+
+  if (liked.length === 0) {
+    return (
+      <p className="text-light-4 w-full text-center">
+        No liked posts yet.
+      </p>
+    );
+  }
+
+  return <GridPostList posts={liked} showStats={false} />;
 };
 
 export default LikedPosts;

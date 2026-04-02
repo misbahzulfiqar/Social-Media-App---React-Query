@@ -28,6 +28,7 @@ import {
   savePost,
   deleteSavedPost,
   getUserSavedPosts,
+  getPostsLikedByUser,
 } from "@/lib/appwrite/api";
 import type {
   INewPost,
@@ -180,6 +181,23 @@ export const useGetUserPosts = (userId?: string) => {
   });
 };
 
+export const useGetPostsLikedByUser = (userProfileDocId?: string) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.GET_USER_LIKED_POSTS, userProfileDocId],
+    queryFn: async () => {
+      const res = await getPostsLikedByUser(userProfileDocId);
+      if (!res) {
+        return { total: 0, documents: [] as IPostDoc[] };
+      }
+      return {
+        ...res,
+        documents: normalizePostDocuments(res.documents),
+      };
+    },
+    enabled: !!userProfileDocId?.trim(),
+  });
+};
+
 export const useUpdatePost = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -200,6 +218,12 @@ export const useDeletePost = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_USER_POSTS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_USER_LIKED_POSTS],
       });
     },
   });
@@ -226,7 +250,13 @@ export const useLikePost = () => {
         queryKey: [QUERY_KEYS.GET_POSTS],
       });
       queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_INFINITE_POSTS],
+      });
+      queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.GET_CURRENT_USER],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_USER_LIKED_POSTS],
       });
     },
   });
@@ -322,6 +352,9 @@ export const useUpdateUser = () => {
       });
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.GET_USER_BY_ID, data?.$id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_USER_POSTS],
       });
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.GET_USERS],

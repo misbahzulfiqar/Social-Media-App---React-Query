@@ -23,6 +23,8 @@ import { placeholderBanner } from "@/lib/placeholderImages";
 import { ProfileValidation } from "@/lib/validation";
 import { useUserContext } from "@/context/authContext";
 import { useGetUserById, useUpdateUser } from "@/lib/react-query/queriesAndMutations";
+import { normalizeUserDocument } from "@/lib/utils";
+import type { Models } from "appwrite";
 import {
   pickUserBio,
   pickUserProfileImageUrl,
@@ -70,28 +72,33 @@ const UpdateProfile = () => {
 
   // Handler
   const handleUpdate = async (value: z.infer<typeof ProfileValidation>) => {
-    const updatedUser = await updateUser({
-      userId: currentUser.$id,
-      name: value.name,
-      bio: value.bio ?? "",
-      file: value.file,
-      imageUrl: currentUser.imageUrl ?? "",
-      imageId: currentUser.imageId ?? "",
-    });
+    try {
+      const updatedUser = await updateUser({
+        userId: currentUser.$id,
+        name: value.name,
+        bio: value.bio ?? "",
+        file: value.file,
+        imageUrl: currentUser.imageUrl ?? "",
+        imageId: currentUser.imageId ?? "",
+      });
 
-    if (!updatedUser) {
+      if (!updatedUser) {
+        toast.error("Update user failed. Please try again.");
+        return;
+      }
+
+      const normalized = normalizeUserDocument(updatedUser as Models.Document);
+      setUser({
+        ...user,
+        name: normalized.name,
+        username: normalized.username,
+        bio: normalized.bio ?? "",
+        imageUrl: normalized.imageUrl ?? "",
+      });
+      return navigate(`/profile/${id}`);
+    } catch {
       toast.error("Update user failed. Please try again.");
-      return;
     }
-
-    const updatedDoc = updatedUser as unknown as Record<string, unknown>;
-    setUser({
-      ...user,
-      name: updatedUser?.name,
-      bio: pickUserBio(updatedDoc),
-      imageUrl: pickUserProfileImageUrl(updatedDoc),
-    });
-    return navigate(`/profile/${id}`);
   };
 
   return (

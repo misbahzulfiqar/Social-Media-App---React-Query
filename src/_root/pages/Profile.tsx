@@ -11,7 +11,10 @@ import { Button } from "@/components/ui/button";
 import { LikedPosts } from "@/_root/pages";
 import { useUserContext } from "@/context/authContext";
 import { pickUserBio } from "@/lib/appwrite/config";
-import { useGetUserById } from "@/lib/react-query/queriesAndMutations";
+import {
+  useGetUserById,
+  useGetUserPosts,
+} from "@/lib/react-query/queriesAndMutations";
 import { GridPostList } from "@/components/shared";
 import { placeholderAvatar, placeholderBanner } from "@/lib/placeholderImages";
 import { Loading } from "@/shared/Loading";
@@ -34,6 +37,7 @@ const Profile = () => {
   const { pathname } = useLocation();
 
   const { data: currentUser } = useGetUserById(id || "");
+  const { data: userPosts, isLoading: isPostsLoading } = useGetUserPosts(id);
 
   if (!currentUser)
     return (
@@ -44,6 +48,11 @@ const Profile = () => {
 
   const profileSrc =
     currentUser.imageUrl?.trim() || placeholderAvatar(currentUser.$id);
+
+  const gridPosts =
+    userPosts !== undefined
+      ? (userPosts.documents ?? [])
+      : (currentUser.posts ?? []);
 
   return (
     <div className="profile-container">
@@ -73,7 +82,14 @@ const Profile = () => {
             </div>
 
             <div className="flex gap-8 mt-10 items-center justify-center xl:justify-start flex-wrap z-20">
-              <StatBlock value={(currentUser.posts ?? []).length} label="Posts" />
+              <StatBlock
+                value={
+                  userPosts !== undefined
+                    ? (userPosts.documents?.length ?? 0)
+                    : (currentUser.posts?.length ?? 0)
+                }
+                label="Posts"
+              />
               <StatBlock value={20} label="Followers" />
               <StatBlock value={20} label="Following" />
             </div>
@@ -145,7 +161,13 @@ const Profile = () => {
         <Route
           index
           element={
-            <GridPostList posts={currentUser.posts ?? []} showUser={false} />
+            isPostsLoading ? (
+              <div className="flex-center w-full min-h-[240px]">
+                <Loading />
+              </div>
+            ) : (
+              <GridPostList posts={gridPosts} showUser={false} />
+            )
           }
         />
         {currentUser.$id === user.id && (

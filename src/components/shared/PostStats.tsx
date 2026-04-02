@@ -52,8 +52,17 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
       likesArray.push(userId);
     }
 
+    const previousLikes = likes;
     setLikes(likesArray);
-    likePost({ postId: post.$id, likesArray });
+    likePost(
+      { postId: post.$id, likesArray },
+      {
+        onError: () => {
+          setLikes(previousLikes);
+          toast.error("Could not update like. Please try again.");
+        },
+      }
+    );
   };
 
   const handleSavePost = (

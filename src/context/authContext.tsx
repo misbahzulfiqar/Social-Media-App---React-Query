@@ -35,6 +35,9 @@ type IContextType = {
 
 const AuthContext = createContext<IContextType>(INITIAL_STATE);
 
+const AUTH_CHECK_TIMEOUT_MS = 15_000;
+const authCheckTimedOut = Symbol("authCheckTimedOut");
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<IUser>(INITIAL_USER);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -44,7 +47,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkAuthUser = useCallback(async () => {
     setIsLoading(true);
     try {
-      const currentAccount = await getCurrentUser();
+      const currentAccount = await Promise.race([
+        getCurrentUser(),
+        new Promise<typeof authCheckTimedOut>((resolve) =>
+          setTimeout(() => resolve(authCheckTimedOut), AUTH_CHECK_TIMEOUT_MS)
+        ),
+      ]);
+
+      if (currentAccount === authCheckTimedOut) {
+        console.warn(
+          "Session check timed out — continuing without a profile. Check Appwrite URL, project id, and network."
+        );
+        setIsAuthenticated(false);
+        return false;
+      }
+
       if (currentAccount) {
         const doc = currentAccount as unknown as Record<string, unknown>;
         setUser({
