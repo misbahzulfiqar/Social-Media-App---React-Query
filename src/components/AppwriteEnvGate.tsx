@@ -6,7 +6,7 @@ const panel: React.CSSProperties = {
   boxSizing: "border-box",
   minHeight: "100dvh",
   margin: 0,
-  padding: "2rem 1.25rem",
+  padding: "2rem 1.20rem",
   fontFamily: "system-ui, -apple-system, Segoe UI, sans-serif",
   background: "#0a0a0a",
   color: "#e5e5e5",
