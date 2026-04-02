@@ -9,8 +9,6 @@ interface ImportMetaEnv {
   readonly VITE_APPWRITE_URL?: string;
   /** Appwrite project id — required at build time for the client SDK. */
   readonly VITE_APPWRITE_PROJECT_ID?: string;
-  /** Unused in this app — use `VITE_APPWRITE_URL`. Shown on deployment debug page. */
-  readonly VITE_APPWRITE_ENDPOINT?: string;
   /** Users profile image URL attribute; e.g. `imgURL` (JSM) or `imageUrl`. Omit env to skip sending. */
   readonly VITE_APPWRITE_USER_IMAGE_ATTR?: string;
   /** Users profile image file id attribute; e.g. `imgID`. Omit env to skip sending. */
