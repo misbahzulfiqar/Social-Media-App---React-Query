@@ -14,7 +14,6 @@ import EditPost from "./_root/pages/EditPost";
 import PostDetails from "./_root/pages/PostDetails";
 import Profile from "./_root/pages/Profile";
 import UpdateProfile from "./_root/pages/UpdateProfile";
-import DeploymentDebug from "./_root/pages/DeploymentDebug";
 import { useUserContext } from "@/context/authContext";
 import { Loading } from "@/shared/Loading";
 
@@ -46,8 +45,7 @@ function CatchAll() {
   return <Navigate to={isAuthenticated ? "/" : "/signin"} replace />;
 }
 
-/** Main app: auth bootstrap + protected routes. */
-function MainApp() {
+function App() {
   return (
     <AuthBootstrap>
       <main className="flex h-screen min-h-0 w-screen flex-col overflow-hidden">
@@ -75,15 +73,6 @@ function MainApp() {
         </Routes>
       </main>
     </AuthBootstrap>
-  );
-}
-
-function App() {
-  return (
-    <Routes>
-      <Route path="/deployment-debug" element={<DeploymentDebug />} />
-      <Route path="*" element={<MainApp />} />
-    </Routes>
   );
 }
 
