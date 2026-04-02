@@ -5,6 +5,7 @@ import "@fontsource-variable/geist/wght.css";
 import "./index.css";
 import App from "./App.tsx";
 import { Toaster } from "@/components/ui/sonner";
+import { AppwriteEnvGate } from "@/components/AppwriteEnvGate";
 import { RootErrorBoundary } from "@/components/RootErrorBoundary";
 import { AuthProvider } from "@/context/authContext";
 import { QueryProvider } from "@/lib/react-query/QueryProvider";
@@ -19,16 +20,18 @@ rootEl.replaceChildren();
 
 ReactDOM.createRoot(rootEl).render(
   <RootErrorBoundary>
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-      <BrowserRouter>
-        <QueryProvider>
-          <AuthProvider>
-            <App />
-            <Toaster richColors position="top-center" />
-          </AuthProvider>
-        </QueryProvider>
-      </BrowserRouter>
-    </ThemeProvider>
+    <AppwriteEnvGate>
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        <BrowserRouter>
+          <QueryProvider>
+            <AuthProvider>
+              <App />
+              <Toaster richColors position="top-center" />
+            </AuthProvider>
+          </QueryProvider>
+        </BrowserRouter>
+      </ThemeProvider>
+    </AppwriteEnvGate>
   </RootErrorBoundary>
 );
 
