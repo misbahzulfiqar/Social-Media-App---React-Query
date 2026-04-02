@@ -14,6 +14,9 @@ if (!rootEl) {
   throw new Error("Missing #root element");
 }
 
+// Remove any static placeholder in #root so it cannot stick if JS runs.
+rootEl.replaceChildren();
+
 ReactDOM.createRoot(rootEl).render(
   <RootErrorBoundary>
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>

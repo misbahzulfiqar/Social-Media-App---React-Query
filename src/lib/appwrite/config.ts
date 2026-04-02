@@ -89,6 +89,27 @@ export function postImageWritePayload(
   };
 }
 
+/**
+ * Keys used when **uploading** a new profile image on update.
+ * Defaults align with common Snapgram-style Users tables (`imageUrl` / `imageId`),
+ * not `imgURL` / `imgID` (set env if your schema matches JSM).
+ * If `VITE_APPWRITE_USER_IMAGE_ID_ATTR=omit`, the file id field is not sent.
+ */
+export function userProfileImageWritePayload(
+  imageUrl: string,
+  imageStorageFileId: string
+): Record<string, string> {
+  const urlKey = userCollectionImageAttr ?? "imageUrl";
+  const rawIdEnv = import.meta.env.VITE_APPWRITE_USER_IMAGE_ID_ATTR?.trim();
+  const omitId = rawIdEnv?.toLowerCase() === "omit";
+  const out: Record<string, string> = { [urlKey]: imageUrl };
+  if (!omitId) {
+    const idKey = userCollectionImageIdAttr ?? "imageId";
+    out[idKey] = imageStorageFileId;
+  }
+  return out;
+}
+
 export function pickPostImageUrl(doc: Record<string, unknown>): string {
   const primary = doc[postCollectionImageUrlAttr];
   if (primary != null && String(primary)) return String(primary);

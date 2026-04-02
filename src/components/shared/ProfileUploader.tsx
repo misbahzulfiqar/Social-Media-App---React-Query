@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDropzone, type FileWithPath } from "react-dropzone";
 
 import { convertFileToUrl } from "@/lib/utils";
@@ -9,11 +9,19 @@ type ProfileUploaderProps = {
 };
 
 const ProfileUploader = ({ fieldChange, mediaUrl }: ProfileUploaderProps) => {
+  const [pickedFile, setPickedFile] = useState(false);
   const [fileUrl, setFileUrl] = useState<string>(mediaUrl);
+
+  useEffect(() => {
+    if (!pickedFile) {
+      setFileUrl(mediaUrl);
+    }
+  }, [mediaUrl, pickedFile]);
 
   const onDrop = useCallback(
     (acceptedFiles: FileWithPath[]) => {
       fieldChange(acceptedFiles);
+      setPickedFile(true);
       setFileUrl(convertFileToUrl(acceptedFiles[0]));
     },
     [fieldChange]
@@ -33,7 +41,7 @@ const ProfileUploader = ({ fieldChange, mediaUrl }: ProfileUploaderProps) => {
       <div className="cursor-pointer flex-center gap-4">
         <img
           src={fileUrl || "/assets/icons/profile-placeholder.svg"}
-          alt="image"
+          alt=""
           className="h-24 w-24 rounded-full object-cover object-top"
         />
         <p className="text-primary-500 small-regular md:base-semibold">
