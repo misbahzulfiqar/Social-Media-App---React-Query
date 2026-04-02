@@ -52,8 +52,9 @@ export function AppwriteEnvGate({ children }: { children: ReactNode }) {
         This app needs Vite env variables at <strong>build time</strong>. In the Vercel
         dashboard, open your project → Settings → Environment Variables, add the
         variables below for <strong>Production</strong> (and Preview if you use it),
-        then redeploy. Add your production domain under Appwrite → Settings →
-        Platforms → Web app → CORS origins.
+        then redeploy. In Appwrite there is no menu named “CORS”: add a{" "}
+        <strong>Web app</strong> platform and set the <strong>Hostname</strong> (see
+        second note below).
       </p>
       <div style={code}>
         <div>VITE_APPWRITE_URL=https://&lt;region&gt;.cloud.appwrite.io</div>
@@ -77,6 +78,37 @@ export function AppwriteEnvGate({ children }: { children: ReactNode }) {
       <p style={{ margin: 0, maxWidth: "28rem", fontSize: "0.8125rem", color: "#737373" }}>
         Use your live Appwrite API URL (not localhost). The app appends <code>/v1</code>{" "}
         if you paste the host only.
+      </p>
+      <p style={{ margin: 0, maxWidth: "32rem", fontSize: "0.8125rem", color: "#737373" }}>
+        <strong>Appwrite (allowed origin):</strong> Open{" "}
+        <a
+          href="https://cloud.appwrite.io/console"
+          style={{ color: "#c4b5fd" }}
+          target="_blank"
+          rel="noreferrer">
+          cloud.appwrite.io
+        </a>
+        , select your project → on <strong>Overview</strong> find{" "}
+        <strong>Add a platform</strong> → choose <strong>Web app</strong> → in{" "}
+        <strong>Hostname</strong> enter only the site host (no <code>https://</code>
+        ): e.g. <code>your-app.vercel.app</code> or <code>*.vercel.app</code> for all
+        previews. That hostname is what enables CORS. Docs:{" "}
+        <a
+          href="https://appwrite.io/docs/quick-starts/web"
+          style={{ color: "#c4b5fd" }}
+          target="_blank"
+          rel="noreferrer">
+          Web quick start
+        </a>
+        ,{" "}
+        <a
+          href="https://appwrite.io/blog/post/cors-error"
+          style={{ color: "#c4b5fd" }}
+          target="_blank"
+          rel="noreferrer">
+          CORS guide
+        </a>
+        .
       </p>
     </div>
   );
